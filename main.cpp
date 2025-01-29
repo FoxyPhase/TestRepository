@@ -41,7 +41,7 @@ void static wait(int n) {
 
 
 
-void addPlayer(sql::Connection* conn, const std::string& name, int health) {
+void static addPlayer(sql::Connection* conn, const std::string& name, int health) {
     try {
         std::unique_ptr<sql::PreparedStatement> pstmt(conn->prepareStatement("INSERT INTO players (name, health) VALUES (?,?)"));
         pstmt->setString(1, name);
@@ -58,7 +58,7 @@ void addPlayer(sql::Connection* conn, const std::string& name, int health) {
     }
 };
 
-void deletePlayer(sql::Connection* conn, const std::string& name) {
+void static deletePlayer(sql::Connection* conn, const std::string& name) {
     try {
         std::unique_ptr<sql::PreparedStatement> pstmt(conn->prepareStatement("DELETE FROM players WHERE name = ?"));
         pstmt->setString(1, name);
@@ -82,6 +82,25 @@ void deletePlayer(sql::Connection* conn, const std::string& name) {
     }
 }
 
+void static showPlayers(sql::Connection* conn) {
+    try {
+        std::unique_ptr<sql::PreparedStatement> pstmt(conn->prepareStatement("SELECT * FROM players"));
+        std::unique_ptr<sql::ResultSet> result(pstmt->executeQuery());
+
+        while (result->next()) {
+            cout << "ID: " << result->getInt("id") << ", ";
+            cout << "Name: " << result->getString("name") << ", ";
+            cout << "Health: " << result->getInt("health") << "." << endl;
+        }
+
+    }
+    catch (sql::SQLException e) {
+        setConsoleColor(4);
+        cout << "Ошибка: " << e.what() << endl;
+        setConsoleColor(7);
+    }
+}
+
 int main() {
     setlocale(LC_ALL, "Ru");
     SetConsoleCP(1251);
@@ -91,9 +110,7 @@ int main() {
 
     sql::Connection* conn = db.getConnection();
 
+    showPlayers(conn);
     
-    
-   
-
     return 0;
 }
