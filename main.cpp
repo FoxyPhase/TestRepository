@@ -23,6 +23,7 @@
 #include "database.h"
 #include "colors.h"
 #include "inventory.h"
+#include "player.h"
 
 using std::cout;
 using std::endl;
@@ -102,6 +103,10 @@ void static showPlayers(sql::Connection* conn) {
     }
 }
 
+void sign(sql::Connection* conn, std::unique_ptr<player>& plr);
+void checkLogin(sql::Connection* conn, std::unique_ptr<player>& plr);
+void checkRegister(sql::Connection* conn, std::unique_ptr<player>& plr);
+
 int main() {
     setlocale(LC_ALL, "Ru");
     SetConsoleCP(1251);
@@ -111,9 +116,106 @@ int main() {
 
     sql::Connection* conn = db.getConnection();
 
-    inventory s;
-    s.addItem(conn, "Knife");
-    s.delItem();
+    std::unique_ptr<player> currentPlayer = nullptr;
+
+    sign(conn, currentPlayer);
     
     return 0;
+}
+
+void sign(sql::Connection* conn, std::unique_ptr<player>& plr) {
+    try {
+        bool accountHave = false;
+        while (accountHave == false) {
+            int userInput;
+            cout << "У вас есть аккаунт?" << endl;
+            cout << "1. Да\n2.Нет" << endl;
+            cin >> userInput;
+            if (!cin.fail()) {
+                switch (userInput)
+                {
+                case 1:
+                    checkLogin(conn, plr);
+                    greenColor();
+                    cout << "Добро пожаловать!" << endl;
+                    standartColor();
+                    accountHave = true;
+                    break;
+                case 2:
+                    checkRegister(conn, plr);
+                    greenColor();
+                    cout << "Добро пожаловать!" << endl;
+                    standartColor();
+                    accountHave = true;
+                    break;
+                default:
+                    yellowColor();
+                    cout << "Выберите первое или второе!" << endl;
+                    ClearInputBuffer();
+                    standartColor();
+                    break;
+                }
+            }
+            else {
+                yellowColor();
+                cout << "Ввведите целое число!" << endl;
+                ClearInputBuffer();
+                standartColor();
+            }
+        }
+        
+        
+    }
+    catch (sql::SQLException e) {
+        redColor();
+        std::cerr << "Ошибка: " << e.what() << endl;
+        standartColor();
+    }
+}
+
+void checkLogin(sql::Connection* conn, std::unique_ptr<player>& plr) {
+    while (true) {
+        std::string name, password;
+
+        cout << "Введите Логин" << endl;
+        cin >> name;
+
+        std::unique_ptr<sql::PreparedStatement> login(conn->prepareStatement("SELECT * FROM players WHERE name = ?"));
+        login->setString(1, name);
+        std::unique_ptr<sql::ResultSet> rs(login->executeQuery());
+        if (rs->next()) {
+            cout << "Ваш логин найден! Введите пароль" << endl;
+            cin >> password;
+
+            if (password == rs->getString("password")) {
+                plr = std::make_unique<player>(conn, name, password, "login");
+                break;
+            }
+            else {
+                yellowColor();
+                cout << "Неправильный пароль!" << endl;
+                ClearInputBuffer();
+                standartColor();
+                continue;
+            }
+        }
+        else {
+            yellowColor();
+            cout << "Такого логина не существует!" << endl;
+            standartColor();
+            continue;
+        }
+    }
+
+}
+void checkRegister(sql::Connection* conn, std::unique_ptr<player>& plr) {
+    std::string name, password;
+
+    cout << "Введите Логин" << endl;
+    cin >> name;
+    cout << "Введите Пароль" << endl;
+    cin >> password;
+
+    plr = std::make_unique<player>(conn, name, password, "register");
+
 }
