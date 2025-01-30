@@ -21,6 +21,8 @@
 #include <cppconn/resultset.h>
 #include <cppconn/exception.h>
 #include "database.h"
+#include "colors.h"
+#include "inventory.h"
 
 using std::cout;
 using std::endl;
@@ -40,21 +42,20 @@ void static wait(int n) {
 }
 
 
-
 void static addPlayer(sql::Connection* conn, const std::string& name, int health) {
     try {
         std::unique_ptr<sql::PreparedStatement> pstmt(conn->prepareStatement("INSERT INTO players (name, health) VALUES (?,?)"));
         pstmt->setString(1, name);
         pstmt->setInt(2, health);
         pstmt->executeUpdate();
-        setConsoleColor(2);
+        greenColor();
         cout << "Игрок добавлен!" << endl;
-        setConsoleColor(7);
+        standartColor();
     }
     catch (sql::SQLException e) {
-        setConsoleColor(4);
+        redColor();
         std::cerr << "Ошибка добавления: " << e.what() << endl;
-        setConsoleColor(7);
+        standartColor();
     }
 };
 
@@ -65,20 +66,20 @@ void static deletePlayer(sql::Connection* conn, const std::string& name) {
         int rowsAffected = pstmt->executeUpdate();
 
         if (rowsAffected > 0) {
-            setConsoleColor(2);
+            greenColor();
             cout << "Игрок успешно удалён!" << endl;
-            setConsoleColor(7);
+            standartColor();
         }
         else {
-            setConsoleColor(6);
+            yellowColor();
             cout << "Игрок не найден." << endl;
-            setConsoleColor(7);
+            standartColor();
         }
     }
     catch (sql::SQLException e) {
-        setConsoleColor(4);
+        redColor();
         cout << "Ошибка удаления: " << e.what() << endl;
-        setConsoleColor(7);
+        standartColor();
     }
 }
 
@@ -95,9 +96,9 @@ void static showPlayers(sql::Connection* conn) {
 
     }
     catch (sql::SQLException e) {
-        setConsoleColor(4);
-        cout << "Ошибка: " << e.what() << endl;
-        setConsoleColor(7);
+        redColor();
+        std::cerr << "Ошибка: " << e.what() << endl;
+        standartColor();
     }
 }
 
@@ -110,7 +111,9 @@ int main() {
 
     sql::Connection* conn = db.getConnection();
 
-    showPlayers(conn);
+    inventory s;
+    s.addItem(conn, "Knife");
+    s.delItem();
     
     return 0;
 }
