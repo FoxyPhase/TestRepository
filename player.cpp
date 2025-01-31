@@ -47,6 +47,7 @@ player::player(sql::Connection* conn, const std::string& n, const std::string& p
 				chapter = result->getInt("chapter");
 				id = result->getInt("id");
 			}
+			loadPlayerInventory(conn);
 		}
 		else {
 			yellowColor();
@@ -76,3 +77,14 @@ void player::getDamage(sql::Connection* conn, int quanity) {
 		standartColor();
 	}
 }
+
+void player::loadPlayerInventory(sql::Connection* conn) {
+	playerInventory.loadInventory(conn, id);
+}
+
+void player::addPlayerInventory(sql::Connection* conn, const std::string& itemName) {
+	playerInventory.addItem(conn, id, itemName);
+}
+void player::delPlayerInventory(sql::Connection* conn, const std::string& itemName) {
+	playerInventory.delItem(conn, id, itemName);
+};

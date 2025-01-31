@@ -10,6 +10,8 @@
 #include <cppconn/exception.h>
 #include "colors.h"
 
+class player; 
+
 struct item {
 	std::string name, description;
 	int canUse;
@@ -22,9 +24,11 @@ public:
 	inventory();
 	~inventory();
 
-	void addItem(sql::Connection* conn, const std::string& name);
-	void delItem();
-	void useItem();	
+	void addItem(sql::Connection* conn, int plr_id, const std::string& name);
+	void delItem(sql::Connection* conn, int plr_id, const std::string& name);
+	void useItem();
+
+	void loadInventory(sql::Connection* conn, int player_id);
 
 };
 

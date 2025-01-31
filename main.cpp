@@ -119,7 +119,13 @@ int main() {
     std::unique_ptr<player> currentPlayer = nullptr;
 
     sign(conn, currentPlayer);
-    
+
+
+    currentPlayer->loadPlayerInventory(conn);
+    currentPlayer->delPlayerInventory(conn, "Knife");
+    currentPlayer->loadPlayerInventory(conn);
+
+
     return 0;
 }
 
@@ -187,7 +193,7 @@ void checkLogin(sql::Connection* conn, std::unique_ptr<player>& plr) {
             cout << "Ваш логин найден! Введите пароль" << endl;
             cin >> password;
 
-            if (password == rs->getString("password")) {
+            if (password == std::string(rs->getString("password"))){
                 plr = std::make_unique<player>(conn, name, password, "login");
                 break;
             }
@@ -211,8 +217,25 @@ void checkLogin(sql::Connection* conn, std::unique_ptr<player>& plr) {
 void checkRegister(sql::Connection* conn, std::unique_ptr<player>& plr) {
     std::string name, password;
 
-    cout << "Введите Логин" << endl;
-    cin >> name;
+    while (true) {
+        cout << "Введите Логин" << endl;
+        cin >> name;
+        std::unique_ptr<sql::PreparedStatement> pstmt(conn->prepareStatement("SELECT * FROM players WHERE name = ?"));
+        pstmt->setString(1, name);
+        std::unique_ptr<sql::ResultSet> rs(pstmt->executeQuery());
+        if (rs->next()) {
+            yellowColor();
+            cout << "Игрок с таким именем уже существует!" << endl;
+            ClearInputBuffer();
+            standartColor();
+            continue;
+        }
+        else {
+            break;
+        }
+    }
+
+
     cout << "Введите Пароль" << endl;
     cin >> password;
 
